@@ -217,9 +217,10 @@ def get_step_id(problem_url):
     return int(match.group(1))
 
 
-def set_problem(problem_url):
+def set_problem(problem_url, silent=False):
     request_inf = stepik_client.get_request(problem_url)
-    click.secho("\nSetting connection to the page..", bold=True)
+    if not silent:
+        click.secho("\nSetting connection to the page..", bold=True)
     lesson_id = get_lesson_id(problem_url)
     step_id = get_step_id(problem_url)
 
@@ -234,7 +235,8 @@ def set_problem(problem_url):
         file_manager.write_json(ATTEMPT_FILE, data)
     except Exception as e:
         exit_util("You do not have permission to perform this action.")
-    click.secho("Connecting completed!", fg="green", bold=True)
+    if not silent:
+        click.secho("Connecting completed!", fg="green", bold=True)
 
 
 def evaluate(attempt_id, silent=False):
@@ -366,7 +368,7 @@ def submit(solution=None, l=None, link=None, silent=False):
     stepik_client = StepikClient(FileManager())
     
     if link is not None:
-        set_problem(link)
+        set_problem(link, silent=silent)
     
     if solution is not None:
         submit_code(solution, l, silent=silent)

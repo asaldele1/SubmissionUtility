@@ -1,2 +1,2 @@
 #SubmissionUtility
-Command line utility for sending code submissions to Stepic.
+Command line utility for sending code submissions to Stepik.
