@@ -353,7 +353,7 @@ def problem(link=None):
 @main.command()
 @click.argument("solution")
 @click.option("-l", help="language")
-@click.argument("link")
+@click.option("--link")
 def submit(solution=None, l=None, link=None):
     """
     Submit a solution to stepik system.
