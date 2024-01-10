@@ -7,12 +7,12 @@ import requests
 import sys
 import time
 
-STEPIC_URL = "https://stepic.org/api"
-APP_FOLDER = ".stepic"
+STEPIK_URL = "https://stepik.org/api"
+APP_FOLDER = ".stepik"
 CLIENT_FILE = APP_FOLDER + "/client_file"
 ATTEMPT_FILE = APP_FOLDER + "/attempt_file"
 file_manager = None
-stepic_client = None
+stepik_client = None
 
 
 def exit_util(message):
@@ -23,7 +23,7 @@ def exit_util(message):
     sys.exit(0)
 
 
-class StepicClient:
+class StepikClient:
     """
     Client to communicate with api
     """
@@ -57,7 +57,7 @@ class StepicClient:
     def check_user(self):
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.secret)
         try:
-            resp = requests.post('https://stepic.org/oauth2/token/',
+            resp = requests.post('https://stepik.org/oauth2/token/',
                                  data={'grant_type': 'client_credentials'}, auth=auth)
             assert resp.status_code < 300
         except Exception:
@@ -65,23 +65,23 @@ class StepicClient:
 
     def update_client(self):
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.secret)
-        resp = self.post_request('https://stepic.org/oauth2/token/',
+        resp = self.post_request('https://stepik.org/oauth2/token/',
                              data={'grant_type': 'client_credentials'}, auth=auth)
         token = (resp.json())['access_token']
         self.headers = {'Authorization': 'Bearer ' + token, "content-type": "application/json"}
 
     def get_lesson(self, lesson_id):
         self.update_client()
-        lesson = self.get_request(STEPIC_URL + "/lessons/{}".format(lesson_id), headers=self.headers)
+        lesson = self.get_request(STEPIK_URL + "/lessons/{}".format(lesson_id), headers=self.headers)
         return lesson.json()
 
     def get_submission(self, attempt_id):
         self.update_client()
-        resp = self.get_request(STEPIC_URL + "/submissions/{}".format(attempt_id), headers=self.headers)
+        resp = self.get_request(STEPIK_URL + "/submissions/{}".format(attempt_id), headers=self.headers)
         return resp.json()
 
     def get_attempt(self, data):
-        resp = self.post_request(STEPIC_URL + "/attempts", data=data, headers=self.headers)
+        resp = self.post_request(STEPIK_URL + "/attempts", data=data, headers=self.headers)
         return resp.json()
 
     def get_attempt_id(self, lesson, step_id):
@@ -112,7 +112,7 @@ class StepicClient:
         return resp.json()
 
     def get_step(self, step_id):
-        step = self.get_request(STEPIC_URL + "/steps/{}".format(step_id), headers=self.headers)
+        step = self.get_request(STEPIK_URL + "/steps/{}".format(step_id), headers=self.headers)
         return step.json()
 
     def get_languages_list(self):
@@ -218,7 +218,7 @@ def get_step_id(problem_url):
 
 
 def set_problem(problem_url):
-    request_inf = stepic_client.get_request(problem_url)
+    request_inf = stepik_client.get_request(problem_url)
     click.secho("\nSetting connection to the page..", bold=True)
     lesson_id = get_lesson_id(problem_url)
     step_id = get_step_id(problem_url)
@@ -226,8 +226,8 @@ def set_problem(problem_url):
     if lesson_id is None or not step_id:
         exit_util("The link is incorrect.")
 
-    lesson = stepic_client.get_lesson(lesson_id)
-    attempt_id = stepic_client.get_attempt_id(lesson, step_id)
+    lesson = stepik_client.get_lesson(lesson_id)
+    attempt_id = stepik_client.get_attempt_id(lesson, step_id)
     try:
         data = file_manager.read_json(ATTEMPT_FILE)
         data['attempt_id'] = attempt_id
@@ -241,7 +241,7 @@ def evaluate(attempt_id):
     click.secho("Evaluating", bold=True, fg='white')
     time_out = 0.1
     while True:
-        result = stepic_client.get_submission(attempt_id)
+        result = stepik_client.get_submission(attempt_id)
         status = result['submissions'][0]['status']
         hint = result['submissions'][0]['hint']
         if status != 'evaluation':
@@ -258,7 +258,7 @@ def submit_code(code, lang=None):
         exit_util("FIle {} not found".format(code))
     file_name = code
     code = "".join(open(code).readlines())
-    url = STEPIC_URL + "/submissions"
+    url = STEPIK_URL + "/submissions"
     current_time = time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())
     file = file_manager.read_json(ATTEMPT_FILE)
     attempt_id = None
@@ -268,7 +268,7 @@ def submit_code(code, lang=None):
         pass
     if attempt_id is None:
         exit_util("Plz, set the problem link!")
-    available_languages = stepic_client.get_languages_list()
+    available_languages = stepik_client.get_languages_list()
     if lang in available_languages:
         language = lang
     else:
@@ -288,7 +288,7 @@ def submit_code(code, lang=None):
                         "attempt": attempt_id
                     }
     }
-    submit = stepic_client.get_submit(url, json.dumps(submission))
+    submit = stepik_client.get_submit(url, json.dumps(submission))
     evaluate(submit['submissions'][0]['id'])
 
 
@@ -297,7 +297,7 @@ def submit_code(code, lang=None):
 def main():
     """
     Submitter 0.2
-    Tools for submitting solutions to stepic.org
+    Tools for submitting solutions to stepik.org
     """
     global file_manager
     file_manager = FileManager()
@@ -321,7 +321,7 @@ def init():
     """
     Initializes utility: entering client_id and client_secret
     """
-    click.echo("Before using, create new Application on https://stepic.org/oauth2/applications/")
+    click.echo("Before using, create new Application on https://stepik.org/oauth2/applications/")
     click.secho("Client type - Confidential, Authorization grant type - Client credentials.", fg="red", bold=True)
 
     try:
@@ -330,8 +330,8 @@ def init():
         click.secho("Enter your Client secret:", bold=True)
         new_client_secret = input()
         set_client(new_client_id, new_client_secret)
-        global stepic_client
-        stepic_client = StepicClient(FileManager())
+        global stepik_client
+        stepik_client = StepikClient(FileManager())
     except Exception:
         exit_util("Enter right Client id and Client secret")
     click.secho("Submitter was inited successfully!", fg="green", bold=True)
@@ -343,8 +343,8 @@ def problem(link=None):
     """
     Setting new problem as current target.
     """
-    global stepic_client
-    stepic_client = StepicClient(FileManager())
+    global stepik_client
+    stepik_client = StepikClient(FileManager())
 
     if link is not None:
         set_problem(link)
@@ -355,10 +355,10 @@ def problem(link=None):
 @click.option("-l", help="language")
 def submit(solution=None, l=None):
     """
-    Submit a solution to stepic system.
+    Submit a solution to stepik system.
     """
-    global stepic_client
-    stepic_client = StepicClient(FileManager())
+    global stepik_client
+    stepik_client = StepikClient(FileManager())
 
     if solution is not None:
         submit_code(solution, l)
@@ -370,10 +370,10 @@ def lang():
     Displays all available languages for current problem
     """
 
-    global stepic_client
-    stepic_client = StepicClient(FileManager())
+    global stepik_client
+    stepik_client = StepikClient(FileManager())
 
-    for lang in stepic_client.get_languages_list():
+    for lang in stepik_client.get_languages_list():
         click.secho("{} ".format(lang), bold=True, nl=False)
 
 
@@ -383,12 +383,13 @@ def next():
     Switches to the next code challenge in the lesson
     """
 
-    global stepic_client
-    stepic_client = StepicClient(FileManager())
+    global stepik_client
+    stepik_client = StepikClient(FileManager())
     message = "Stayed for current problem."
     color = "red"
-    if stepic_client.next_problem("code"):
+    if stepik_client.next_problem("code"):
         message = "Switched to the next problem successful."
         color = "green"
 
     click.secho(message, bold=True, fg=color)
+main()
