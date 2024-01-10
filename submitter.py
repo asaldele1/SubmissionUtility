@@ -61,7 +61,7 @@ class StepikClient:
                                  data={'grant_type': 'client_credentials'}, auth=auth)
             assert resp.status_code < 300
         except Exception:
-            exit_util("Check yourClient id and Client secret.")
+            exit_util("Check your Client id and Client secret.")
 
     def update_client(self):
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.secret)
@@ -255,7 +255,7 @@ def evaluate(attempt_id, silent=False):
         time_out += time_out
     if not silent:
         click.echo("")
-    click.secho("You solution is {}\n{}".format(status, hint), fg=['red', 'green'][status == 'correct'], bold=True)
+    click.secho("Your solution is {}\n{}".format(status, hint), fg=['red', 'green'][status == 'correct'], bold=True)
 
 
 def submit_code(code, lang=None, silent=False):
