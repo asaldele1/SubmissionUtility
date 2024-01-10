@@ -237,8 +237,9 @@ def set_problem(problem_url):
     click.secho("Connecting completed!", fg="green", bold=True)
 
 
-def evaluate(attempt_id):
-    click.secho("Evaluating", bold=True, fg='white')
+def evaluate(attempt_id, silent=False):
+    if not silent:
+        click.secho("Evaluating", bold=True, fg='white')
     time_out = 0.1
     while True:
         result = stepik_client.get_submission(attempt_id)
@@ -246,14 +247,16 @@ def evaluate(attempt_id):
         hint = result['submissions'][0]['hint']
         if status != 'evaluation':
             break
-        click.echo("..", nl=False)
+        if not silent:
+            click.echo("..", nl=False)
         time.sleep(time_out)
         time_out += time_out
-    click.echo("")
+    if not silent:
+        click.echo("")
     click.secho("You solution is {}\n{}".format(status, hint), fg=['red', 'green'][status == 'correct'], bold=True)
 
 
-def submit_code(code, lang=None):
+def submit_code(code, lang=None, silent=False):
     if not file_manager.is_local_file(code):
         exit_util("FIle {} not found".format(code))
     file_name = code
@@ -289,7 +292,7 @@ def submit_code(code, lang=None):
                     }
     }
     submit = stepik_client.get_submit(url, json.dumps(submission))
-    evaluate(submit['submissions'][0]['id'])
+    evaluate(submit['submissions'][0]['id'], silent=silent)
 
 
 @click.group()
@@ -354,7 +357,8 @@ def problem(link=None):
 @click.argument("solution")
 @click.option("-l", help="language")
 @click.option("--link")
-def submit(solution=None, l=None, link=None):
+@click.option("--silent", is_flag=True)
+def submit(solution=None, l=None, link=None, silent=False):
     """
     Submit a solution to stepik system.
     """
@@ -365,7 +369,7 @@ def submit(solution=None, l=None, link=None):
         set_problem(link)
     
     if solution is not None:
-        submit_code(solution, l)
+        submit_code(solution, l, silent=silent)
 
 
 @main.command()
