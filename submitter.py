@@ -353,13 +353,17 @@ def problem(link=None):
 @main.command()
 @click.argument("solution")
 @click.option("-l", help="language")
-def submit(solution=None, l=None):
+@click.argument("link")
+def submit(solution=None, l=None, link=None):
     """
     Submit a solution to stepik system.
     """
     global stepik_client
     stepik_client = StepikClient(FileManager())
-
+    
+    if link is not None:
+        set_problem(link)
+    
     if solution is not None:
         submit_code(solution, l)
 
